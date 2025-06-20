@@ -54,10 +54,10 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: none;
             margin: 0 auto;
             padding: 20px;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
 
         .title-container {
@@ -132,16 +132,45 @@
             content: "🌙";
         }
 
-        .table-container {
-            margin-top: 20px;
+        .stats-container {
+            margin: 20px 0;
+            padding: 15px;
             background: var(--table-bg);
             border-radius: 10px;
-            box-shadow: 0 4px 15px var(--shadow-color);
-            width: 100%;
-            position: relative;
-            overflow: auto;
-            max-height: calc(100vh - 300px);
-            scroll-behavior: smooth;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            max-width: none;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stats-left {
+            flex: 0 0 1400px;
+        }
+
+        .stats-right {
+            flex: 1;
+            min-width: 200px;
+            background: var(--header-bg);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .stats-section {
+            margin-bottom: 15px;
+        }
+
+        .stats-section-title {
+            font-size: 1em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         table {
@@ -229,30 +258,6 @@
         select:focus, input:focus {
             outline: none;
             border-color: var(--primary-color);
-        }
-
-        .stats-container {
-            margin: 20px 0;
-            padding: 15px;
-            background: var(--table-bg);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px var(--shadow-color);
-        }
-
-        .stats-section {
-            margin-bottom: 15px;
-        }
-
-        .stats-section-title {
-            font-size: 1em;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin: 0 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
         .diff-legend {
@@ -378,6 +383,10 @@
         td[data-column="重伤"] .data-bar { background-color: rgba(148, 0, 211, 0.5) !important; }
         td[data-column="青灯焚骨"] .data-bar { background-color: rgba(138, 43, 226, 0.5) !important; }
         td[data-column="化羽"] .data-bar { background-color: rgba(75, 0, 130, 0.5) !important; }
+        td[data-column="KD"] .data-bar { background-color: rgba(255, 140, 0, 0.5) !important; }
+        td[data-column="人塔伤和"] .data-bar { background-color: rgba(255, 69, 0, 0.5) !important; }
+        td[data-column="伤害转化率"] .data-bar { background-color: rgba(199, 21, 133, 0.5) !important; }
+        td[data-column="治疗转化率"] .data-bar { background-color: rgba(46, 139, 87, 0.5) !important; }
 
         /* 数据文本样式 */
         td .value {
@@ -1017,6 +1026,174 @@
         .player-card.medium-data .player-value {
             color: #ffc107 !important;
         }
+
+        /* 高光时刻按钮样式 */
+        .highlight-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 30px;
+            border-radius: 25px;
+            background: var(--header-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            z-index: 1000;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .highlight-button.enabled {
+            opacity: 1;
+            pointer-events: auto;
+            animation: pulse 2s infinite;
+        }
+
+        .highlight-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(var(--primary-rgb), 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+            }
+        }
+
+        .highlight-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .highlight-modal.active {
+            opacity: 1;
+        }
+
+        .highlight-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 1200px;
+            background: var(--table-bg);
+            border-radius: 15px;
+            padding: 20px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .highlight-modal.active .highlight-content {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .highlight-grid {
+            display: grid;
+            grid-template-rows: repeat(2, 1fr);
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .highlight-card {
+            background: var(--header-bg);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .highlight-card.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .highlight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) rotate(45deg);
+            }
+        }
+
+        .close-highlight {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 2;
+        }
+
+        .highlight-title {
+            font-size: 1.8em;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--shadow-color);
+        }
+
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .player-guild {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .player-value {
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .player-title {
+            font-size: 1em;
+            color: #ffd700;
+            margin-top: 5px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -1057,10 +1234,15 @@
             </div>
         </div>
 
-        <div class="stats-container hidden">
-            <h3>数据统计</h3>
-            <div class="stats-grid" id="statsGrid">
-                <!-- 统计数据将通过JavaScript动态添加 -->
+        <div class="stats-container">
+            <div class="stats-left">
+                <h3>数据统计</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- 统计数据将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            <div class="stats-right">
+                <!-- 右侧空容器区域 -->
             </div>
         </div>
 
@@ -1088,6 +1270,16 @@
         </div>
     </div>
 
+    <button class="highlight-button" id="highlightButton" disabled>✨ 高光时刻</button>
+    
+    <div class="highlight-modal" id="highlightModal">
+        <div class="highlight-content">
+            <button class="close-highlight" onclick="closeHighlight()">×</button>
+            <h2 class="highlight-title">✨ 高光时刻 ✨</h2>
+            <div class="highlight-grid" id="highlightGrid"></div>
+        </div>
+    </div>
+
     <script>
         // 主题切换
         function toggleTheme() {
@@ -1110,12 +1302,12 @@
 
         // 定义数值列和浮点数列（移到全局作用域）
         const numericColumns = ['击败', '助攻', '战备资源', '对玩家伤害', '对建筑伤害', 
-                              '治疗值', '承受伤害', '重伤', '青灯焚骨', '化羽'];
-        const floatColumns = ['控制'];
+                              '治疗值', '承受伤害', '重伤', '青灯焚骨', '化羽', '人塔伤和'];
+        const floatColumns = ['控制', 'KD', '伤害转化率', '治疗转化率'];
 
         // 解析CSV数据
         const lines = csvData.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());  // 确保表头没有空格
+        const headers = lines[0].split(',').map(header => header.trim());
 
         // 处理帮会名称的函数
         function processGuildName(fullName) {
@@ -1123,34 +1315,51 @@
         }
 
         const data = lines.slice(1)
-            .filter(line => line.trim())  // 过滤空行
+            .filter(line => line.trim())
             .map(line => {
-                const values = line.split(',').map(value => value.trim());  // 确保值没有空格
+                const values = line.split(',').map(value => value.trim());
                 const row = {};
                 headers.forEach((header, index) => {
                     let value = values[index] || '';
                     
-                    // 如果是帮会名，处理服务器前缀
                     if (header === '帮会名') {
                         value = processGuildName(value);
                     }
-                    // 如果是控制列，确保是数字格式
                     else if (header === '控制') {
-                        value = value.replace(/[^\d.]/g, '');  // 只保留数字和小数点
-                        value = parseFloat(value || 0).toFixed(2);  // 转换为浮点数并保留两位小数
+                        value = parseFloat(value || 0);
                     }
-                    // 如果是其他数值列，确保是整数格式
-                    else if (numericColumns.includes(header)) {
-                        value = value.replace(/[^\d]/g, '');  // 只保留数字
+                    else if (header === '青灯焚骨' || header === '化羽') {
                         value = parseInt(value || 0);
+                    }
+                    else if (numericColumns.includes(header)) {
+                        value = parseInt(value.replace(/[^\d]/g, '') || 0);
                     }
                     
                     row[header] = value;
                 });
-                // 确保这一行不是表头行
-                return row['帮会名'] !== '帮会名' ? row : null;
+
+                // 计算新的统计数据
+                const kills = parseInt(row['击败'] || 0);
+                const deaths = parseInt(row['重伤'] || 0);
+                row['KD'] = deaths > 0 ? (kills / deaths).toFixed(2) : kills.toFixed(2);
+
+                // 计算人塔伤和
+                const playerDamage = parseInt(row['对玩家伤害'] || 0);
+                const buildingDamage = parseInt(row['对建筑伤害'] || 0);
+                row['人塔伤和'] = playerDamage + buildingDamage;
+
+                // 计算伤害转化率
+                const totalDamage = playerDamage + buildingDamage;
+                const damageTaken = parseInt(row['承受伤害'] || 0);
+                row['伤害转化率'] = damageTaken > 0 ? ((totalDamage / damageTaken) * 100).toFixed(2) : '0.00';
+
+                // 计算治疗转化率
+                const healing = parseInt(row['治疗值'] || 0);
+                row['治疗转化率'] = damageTaken > 0 ? ((healing / damageTaken) * 100).toFixed(2) : '0.00';
+
+                return row;
             })
-            .filter(row => row !== null);  // 过滤掉表头行
+            .filter(row => row['帮会名'] && row['帮会名'] !== '帮会名');
 
         // 当前排序状态
         let currentSort = {
@@ -1197,15 +1406,32 @@
 
         // 初始化表格
         function initTable() {
-            // 添加表头
             const thead = document.querySelector('#dataTable thead tr');
-            headers.forEach(header => {
-                // 跳过等级列
-                if (header === '等级') {
-                    return;
-                }
+            const displayOrder = [
+                '帮会名', '玩家', '职业', '所在团长',
+                '击败', '助攻', '战备资源', '对玩家伤害', '对建筑伤害',
+                '治疗值', '承受伤害', '重伤', '控制', '青灯焚骨', '化羽',
+                'KD', '人塔伤和', '伤害转化率', '治疗转化率'
+            ];
+
+            // 清空表头
+            thead.innerHTML = '';
+
+            // 添加表头列
+            displayOrder.forEach(header => {
+                if (header === '等级') return;
+                
                 const th = document.createElement('th');
                 th.textContent = header;
+                if (header === 'KD') {
+                    th.title = '击败/重伤';
+                } else if (header === '人塔伤和') {
+                    th.title = '对玩家伤害+对建筑伤害';
+                } else if (header === '伤害转化率') {
+                    th.title = '(人塔伤和÷承受伤害)×100%';
+                } else if (header === '治疗转化率') {
+                    th.title = '(治疗值÷承受伤害)×100%';
+                }
                 th.addEventListener('click', () => handleSort(header));
                 thead.appendChild(th);
             });
@@ -1303,6 +1529,7 @@
                     let valueA = a[column];
                     let valueB = b[column];
 
+                    // 根据列类型进行适当的转换
                     if (floatColumns.includes(column)) {
                         valueA = parseFloat(valueA || 0);
                         valueB = parseFloat(valueB || 0);
@@ -1339,11 +1566,15 @@
             
             filteredData.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                headers.forEach(header => {
-                    // 跳过等级列
-                    if (header === '等级') {
-                        return;
-                    }
+                const displayOrder = [
+                    '帮会名', '玩家', '职业', '所在团长',
+                    '击败', '助攻', '战备资源', '对玩家伤害', '对建筑伤害',
+                    '治疗值', '承受伤害', '重伤', '控制', '青灯焚骨', '化羽',
+                    'KD', '人塔伤和', '伤害转化率', '治疗转化率'
+                ];
+
+                displayOrder.forEach(header => {
+                    if (header === '等级') return;
 
                     const td = document.createElement('td');
                     const value = row[header];
@@ -1358,10 +1589,8 @@
                         let displayNumber;
                         if (currentSort.column) {
                             if (currentSort.direction === 'desc') {
-                                // 降序时从1开始递增
                                 displayNumber = (index + 1).toString().padStart(2, '0');
                             } else {
-                                // 升序时从最大数开始倒数
                                 displayNumber = (filteredData.length - index).toString().padStart(2, '0');
                             }
                         } else {
@@ -1382,26 +1611,27 @@
                         // 添加到单元格
                         td.appendChild(numberSpan);
                         td.appendChild(guildSpan);
-                    } else if (header === '控制') {
+                    } else if (floatColumns.includes(header) || numericColumns.includes(header)) {
                         td.className = 'numeric';
                         td.setAttribute('data-column', header);
-                        const numValue = Math.round(parseFloat(value || 0));
+                        const isFloat = floatColumns.includes(header);
+                        const numValue = isFloat ? parseFloat(value || 0) : parseInt(value || 0);
                         const maxValue = maxValues[header] || 1;
                         const percentage = ((numValue / maxValue) * 100).toFixed(2);
-                        td.innerHTML = `
-                            <div class="data-bar" style="width: ${percentage}%"></div>
-                            <span class="value">${numValue.toLocaleString()}</span>
-                        `;
-                    } else if (numericColumns.includes(header)) {
-                        td.className = 'numeric';
-                        td.setAttribute('data-column', header);
-                        const numValue = parseInt(value || 0);
-                        const maxValue = maxValues[header] || 1;
-                        const percentage = ((numValue / maxValue) * 100).toFixed(2);
-                        td.innerHTML = `
-                            <div class="data-bar" style="width: ${percentage}%"></div>
-                            <span class="value">${numValue.toLocaleString()}</span>
-                        `;
+                        
+                        // 创建数据条容器
+                        const barContainer = document.createElement('div');
+                        barContainer.className = 'data-bar';
+                        barContainer.style.width = `${percentage}%`;
+                        
+                        // 创建值容器
+                        const valueContainer = document.createElement('span');
+                        valueContainer.className = 'value';
+                        valueContainer.textContent = isFloat ? numValue.toFixed(2) : numValue.toLocaleString();
+                        
+                        // 添加到单元格
+                        td.appendChild(barContainer);
+                        td.appendChild(valueContainer);
                     } else if (header === '职业') {
                         td.className = `profession profession-${value}`;
                         td.textContent = value || '';
@@ -2253,6 +2483,321 @@
             // 更新按钮文字和图标
             const newText = statsContainer.classList.contains('hidden') ? '恢复统计' : '隐藏统计';
             toggleButton.innerHTML = `<span style="font-size: 18px; margin-right: 8px;">📊</span>${newText}`;
+        }
+
+        // 高光时刻功能
+        function openHighlights() {
+            const modal = document.getElementById('highlightModal');
+            const content = document.getElementById('highlightContent');
+            
+            // 定义要统计的数据项及其对应的标题和图标
+            const highlights = [
+                { key: '击败', title: '屠杀者', emoji: '⚔️', isMin: false },
+                { key: '助攻', title: '辅助王者', emoji: '🤝', isMin: false },
+                { key: '对玩家伤害', title: '伤害之王', emoji: '💥', isMin: false },
+                { key: '对建筑伤害', title: '拆迁之王', emoji: '🏰', isMin: false },
+                { key: '治疗值', title: '治疗之光', emoji: '💖', isMin: false },
+                { key: '承受伤害', title: '铁壁之躯', emoji: '🛡️', isMin: false },
+                { key: '控制', title: '控制大师', emoji: '⛓️', isMin: false },
+                { key: '重伤', title: '永生不死', emoji: '🌟', isMin: true },
+                { key: 'KD', title: 'KD之王', emoji: '📊', isMin: false },
+                { key: '人塔伤和', title: '毁灭之王', emoji: '💫', isMin: false },
+                { key: '伤害转化率', title: '转化之王', emoji: '🔄', isMin: false },
+                { key: '治疗转化率', title: '治愈之光', emoji: '✨', isMin: false }
+            ];
+
+            // 清空内容
+            content.innerHTML = '';
+
+            // 获取每个数据项的最高/最低玩家
+            highlights.forEach((item, index) => {
+                const players = [...data];
+                players.sort((a, b) => {
+                    const valueA = parseFloat(a[item.key] || 0);
+                    const valueB = parseFloat(b[item.key] || 0);
+                    return item.isMin ? valueA - valueB : valueB - valueA;
+                });
+
+                const topPlayer = players[0];
+                if (!topPlayer) return;
+
+                const card = document.createElement('div');
+                card.className = 'highlight-card';
+                card.style.setProperty('--profession-rgb', getProfessionRGB(topPlayer['职业']));
+
+                const value = item.isMin ? 
+                    Math.min(...players.map(p => parseFloat(p[item.key] || 0))) :
+                    Math.max(...players.map(p => parseFloat(p[item.key] || 0)));
+
+                card.innerHTML = `
+                    <div class="highlight-card-title">
+                        <span class="emoji">${item.emoji}</span>
+                        ${item.title}
+                    </div>
+                    <div class="highlight-value">
+                        ${formatValue(value, item.key)}
+                    </div>
+                    <div class="highlight-player">
+                        ${topPlayer['玩家']}
+                        <span class="highlight-profession profession-${topPlayer['职业']}">
+                            ${topPlayer['职业']}
+                        </span>
+                        <span style="font-size: 0.9em; opacity: 0.8;">
+                            ${topPlayer['帮会名']}
+                        </span>
+                    </div>
+                `;
+
+                content.appendChild(card);
+
+                // 添加延迟动画
+                setTimeout(() => {
+                    card.classList.add('show');
+                    card.style.animation = 'cardPulse 2s infinite';
+                }, index * 100);
+            });
+
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeHighlights() {
+            const modal = document.getElementById('highlightModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // 获取职业对应的RGB颜色值
+        function getProfessionRGB(profession) {
+            const colorMap = {
+                '血河': '170,38,49',
+                '铁衣': '216,111,10',
+                '碎梦': '24,178,231',
+                '九灵': '165,32,173',
+                '神相': '57,88,165',
+                '龙吟': '68,181,136',
+                '素问': '255,169,198',
+                '玄机': '178,169,105',
+                '鸿音': '222,179,68',
+                '荒羽': '159,150,206',
+                '潮光': '132,203,247',
+                '沧澜': '0,119,190'
+            };
+            return colorMap[profession] || '128,128,128';
+        }
+
+        // 格式化数值显示
+        function formatValue(value, key) {
+            if (floatColumns.includes(key)) {
+                return parseFloat(value).toFixed(2);
+            }
+            return parseInt(value).toLocaleString();
+        }
+
+        // 点击modal外部关闭
+        window.onclick = function(event) {
+            const courtModal = document.getElementById('courtModal');
+            const highlightModal = document.getElementById('highlightModal');
+            if (event.target == courtModal) {
+                courtModal.style.display = 'none';
+            }
+            if (event.target == highlightModal) {
+                closeHighlights();
+            }
+        }
+
+        // 更新高光时刻按钮状态
+        function updateHighlightButtonState() {
+            const teamFilter = document.getElementById('teamFilter').value;
+            const highlightButton = document.getElementById('highlightButton');
+            
+            if (teamFilter) {
+                highlightButton.classList.add('enabled');
+                highlightButton.disabled = false;
+            } else {
+                highlightButton.classList.remove('enabled');
+                highlightButton.disabled = true;
+            }
+        }
+
+        // 监听帮会选择变化
+        document.getElementById('teamFilter').addEventListener('change', updateHighlightButtonState);
+
+        // 职业颜色映射
+        const professionColors = {
+            '血河': '#aa2631',
+            '铁衣': '#d86f0a',
+            '碎梦': '#18b2e7',
+            '九灵': '#a520ad',
+            '神相': '#3958a5',
+            '龙吟': '#44b588',
+            '素问': '#ffa9c6',
+            '玄机': '#b2a969',
+            '鸿音': '#deb344',
+            '荒羽': '#9f96ce',
+            '潮光': '#84cbf7',
+            '沧澜': '#0077be'
+        };
+
+        // 显示高光时刻
+        function showHighlight() {
+            const teamFilter = document.getElementById('teamFilter').value;
+            if (!teamFilter) return;
+
+            const modal = document.getElementById('highlightModal');
+            const grid = document.getElementById('highlightGrid');
+            grid.innerHTML = '';
+
+            const teamData = data.filter(row => row['帮会名'] === teamFilter);
+            
+            // 计算团队平均值和阈值
+            const teamStats = teamData.reduce((stats, player) => {
+                const totalDamage = parseFloat(player['对玩家伤害'] || 0) + parseFloat(player['对建筑伤害'] || 0);
+                const healing = parseFloat(player['治疗值'] || 0);
+                const damageTaken = parseFloat(player['承受伤害'] || 0);
+                
+                stats.totalDamageSum += totalDamage;
+                stats.healingSum += healing;
+                stats.damageTakenSum += damageTaken;
+                stats.count++;
+                
+                return stats;
+            }, { totalDamageSum: 0, healingSum: 0, damageTakenSum: 0, count: 0 });
+
+            const avgTeamDamage = teamStats.totalDamageSum / teamStats.count;
+            const avgTeamHealing = teamStats.healingSum / teamStats.count;
+            const avgTeamDamageTaken = teamStats.damageTakenSum / teamStats.count;
+
+            // 定义高光时刻类别
+            const highlights = [
+                { title: '屠杀者', metric: '击败', type: 'max', icon: '⚔️' },
+                { title: '辅助王者', metric: '助攻', type: 'max', icon: '🤝' },
+                { title: '伤害之王', metric: '对玩家伤害', type: 'max', icon: '💥' },
+                { title: '拆迁之王', metric: '对建筑伤害', type: 'max', icon: '🏰' },
+                { title: '治疗之光', metric: '治疗值', type: 'max', icon: '💖' },
+                { title: '铁壁之躯', metric: '承受伤害', type: 'max', icon: '🛡️' },
+                { title: '控制大师', metric: '控制', type: 'max', icon: '🕸️' },
+                { title: '永生不死', metric: '重伤', type: 'min', icon: '🧬' },
+                { title: 'KD之王', metric: 'KD', type: 'max', icon: '📊' },
+                { title: '毁灭之王', metric: '人塔伤和', type: 'max', icon: '💫' },
+                { 
+                    title: '转化之王', 
+                    metric: '伤害转化率', 
+                    type: 'max', 
+                    icon: '⚡',
+                    getValue: (player) => {
+                        const totalDamage = parseFloat(player['对玩家伤害'] || 0) + parseFloat(player['对建筑伤害'] || 0);
+                        const damageTaken = parseFloat(player['承受伤害'] || 0);
+                        
+                        // 验证条件：
+                        // 1. 总伤害必须达到团队平均值的50%以上
+                        // 2. 承受伤害必须至少有1万以上
+                        // 3. 总伤害必须至少有5万以上
+                        if (totalDamage < avgTeamDamage * 0.5 || damageTaken < 10000 || totalDamage < 50000) {
+                            return 0;
+                        }
+                        
+                        return (totalDamage / damageTaken) * 100;
+                    }
+                },
+                { 
+                    title: '治愈之光', 
+                    metric: '治疗转化率', 
+                    type: 'max', 
+                    icon: '✨',
+                    getValue: (player) => {
+                        const healing = parseFloat(player['治疗值'] || 0);
+                        const damageTaken = parseFloat(player['承受伤害'] || 0);
+                        
+                        // 验证条件：
+                        // 1. 治疗量必须达到团队平均值的50%以上
+                        // 2. 承受伤害必须至少有1万以上
+                        // 3. 治疗量必须至少有5万以上
+                        if (healing < avgTeamHealing * 0.5 || damageTaken < 10000 || healing < 50000) {
+                            return 0;
+                        }
+                        
+                        return (healing / damageTaken) * 100;
+                    }
+                }
+            ];
+
+            // 创建高光卡片
+            highlights.forEach((highlight, index) => {
+                const bestPlayer = teamData.reduce((best, current) => {
+                    const currentValue = highlight.getValue ? 
+                        highlight.getValue(current) : 
+                        parseFloat(current[highlight.metric]) || 0;
+                    
+                    const bestValue = highlight.getValue ? 
+                        highlight.getValue(best) : 
+                        parseFloat(best[highlight.metric]) || 0;
+                    
+                    return (highlight.type === 'max' ? currentValue > bestValue : currentValue < bestValue) ? current : best;
+                }, teamData[0]);
+
+                const card = document.createElement('div');
+                card.className = 'highlight-card';
+                card.style.setProperty('--delay', `${index * 0.1}s`);
+                
+                const professionColor = professionColors[bestPlayer['职业']] || '#666';
+                card.style.borderLeft = `4px solid ${professionColor}`;
+                card.style.boxShadow = `0 0 10px ${professionColor}40`;
+
+                const value = highlight.getValue ? 
+                    highlight.getValue(bestPlayer) : 
+                    bestPlayer[highlight.metric];
+
+                card.innerHTML = `
+                    <div class="player-title">${highlight.icon} ${highlight.title}</div>
+                    <div class="player-name">${bestPlayer['玩家']}</div>
+                    <div class="player-guild">${bestPlayer['职业']}</div>
+                    <div class="player-value">${formatNumber(value)}</div>
+                `;
+
+                grid.appendChild(card);
+                
+                // 添加延迟动画
+                setTimeout(() => card.classList.add('active'), 50 + index * 100);
+            });
+
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('active'), 50);
+        }
+
+        // 关闭高光时刻
+        function closeHighlight() {
+            const modal = document.getElementById('highlightModal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // 绑定高光时刻按钮点击事件
+        document.getElementById('highlightButton').addEventListener('click', showHighlight);
+
+        // 点击模态框外部关闭
+        document.getElementById('highlightModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHighlight();
+            }
+        });
+
+        // 格式化数字显示
+        function formatNumber(value) {
+            if (typeof value === 'undefined' || value === null) return '0';
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return '0';
+            
+            if (num >= 10000) {
+                return (num / 10000).toFixed(1) + '万';
+            }
+            
+            if (Number.isInteger(num)) {
+                return num.toLocaleString();
+            }
+            
+            return num.toFixed(2);
         }
     </script>
 </body>
